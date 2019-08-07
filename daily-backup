@@ -1,0 +1,38 @@
+#!/bin/bash
+
+FORMAT=tgz
+ZHOME=/opt/zimbra
+ZBACKUP=/srv/backup/harian
+ZCONFD=$ZHOME/conf
+DATE=`date +"%d%m%y"`
+ZDUMPDIR=$ZBACKUP/$DATE
+ZMBOX=/opt/zimbra/bin/zmmailbox
+OLD=`date --date="7 days ago" +"%d%m%y"`
+
+echo "==============="
+date
+echo "==============="
+
+if [ $# -eq 0 ]; then
+ qd=`date --date='1 days ago' +"%m/%d/%Y"`
+ query="&query=after:$qd"
+fi
+
+if [ ! -d $ZDUMPDIR ]; then
+        mkdir -p $ZDUMPDIR
+fi
+
+for mbox in `sudo su - zimbra -c 'zmprov -l gaa'`
+do
+echo "Backup user $mbox ..."
+        $ZMBOX -z -m $mbox getRestURL "//?fmt=${FORMAT}$query" > $ZDUMPDIR/$mbox.${FORMAT}
+done
+
+#echo "=============="
+#echo "Compress Old Directory"
+#echo "=============="
+#find /srv/backup/harian/ -type d -mtime 7 -exec tar -czvf $OLD.tar.gz --remove-files {} \;
+
+echo "==============="
+echo "Zimbra Daily backup selesai."
+echo "==============="
